@@ -608,6 +608,7 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
             if etype in ["all", "exec"]:
                 exec_score = eval_exec_match(db=db, p_str=p_str, g_str=g_str, plug_value=plug_value,
                                              keep_distinct=keep_distinct, progress_bar_for_each_datapoint=progress_bar_for_each_datapoint)
+                print(str(exec_score) + "\t" + p_str + "\t" + g_str)
                 if exec_score:
                     scores[hardness]['exec'] += 1
                     scores[turn_id]['exec'] += 1
@@ -923,7 +924,7 @@ if __name__ == "__main__":
                         choices=('all', 'exec', 'match'))
     parser.add_argument('--plug_value', default=False, action='store_true',
                         help='whether to plug in the gold value into the predicted query; suitable if your model does not predict values.')
-    parser.add_argument('--keep_distinct', default=False, action='store_true',
+    parser.add_argument('--keep_distinct', default=True, action='store_true',
                         help='whether to keep distinct keyword during evaluation. default is false.')
     parser.add_argument('--progress_bar_for_each_datapoint', default=False, action='store_true',
                         help='whether to print progress bar of running test inputs for each datapoint')
