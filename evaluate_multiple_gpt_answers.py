@@ -11,6 +11,7 @@ def parse_option():
     parser = argparse.ArgumentParser("command line arguments for evaluate multiple sqls")
 
     parser.add_argument("--input_dataset_path", default="./evaluation_examples/dev_pred_C3_multiple_answer.json", type=str)
+    parser.add_argument("--input_original_result_path", default="./result/result_exec_C3.txt", type=str)
     # parser.add_argument("--output_dataset_path", default="./multiple_gpt_answers_wrong_cases.json", type=str)
 
     parser.add_argument('--db', dest='db', type=str,
@@ -42,6 +43,14 @@ if __name__ == '__main__':
     with open(opt.input_dataset_path) as f:
         replies = json.load(f)
 
+    with open(opt.input_original_result_path) as f:
+        original_results = [int(line.split("\t")[0]) for line in f.readlines() if line.startswith("0") or line.startswith("1")]
+
+    wrong_cases = [i for i in range(len(original_results)) if original_results[i] == 0]
+    correct_cases = [i for i in range(len(original_results)) if original_results[i] == 1]
+    wrong_case_num = len(wrong_cases)
+    correct_case_num = len(correct_cases)
+
     hit_times = {}
     for i, item in enumerate(tqdm(replies)):
         case_id, db_id, gold_sql = item["id"], item["db_id"], item["gold"]
@@ -51,6 +60,9 @@ if __name__ == '__main__':
             continue
         if opt.end >= 0 and case_id > opt.end:
             break
+
+        if case_id in correct_cases:  # Originally correct prediction
+            continue
 
         db = os.path.join(opt.db, db_id, db_id + ".sqlite")  # db: database/concert_singer/concert_singer.sqlite
 
@@ -80,13 +92,12 @@ if __name__ == '__main__':
         hit_times[case_id] = int(res1) + int(res2) + int(res3)
         print("case id: %d, hit_times: %d" % (case_id, hit_times[case_id]))
 
-    hit_all = sum([int(hit_times[item["id"]] == 3) for item in replies])
-    hit_twice = sum([int(hit_times[item["id"]] == 2) for item in replies])
-    hit_once = sum([int(hit_times[item["id"]] == 1) for item in replies])
+    hit_all = sum([int(hit_times[case_id] == 3) for case_id in wrong_cases])
+    hit_twice = sum([int(hit_times[case_id] == 2) for case_id in wrong_cases])
+    hit_once = sum([int(hit_times[case_id] == 1) for case_id in wrong_cases])
 
-    print("hit 3/3: %d, %f" % (hit_all, (hit_all / len(replies))))
-    print("hit 2/3: %d, %f" % (hit_twice, (hit_twice / len(replies))))
-    print("hit 1/3: %d, %f" % (hit_once, (hit_once / len(replies))))
-
+    print("hit 3/3: %d, %f" % (hit_all, (hit_all / wrong_case_num)))
+    print("hit 2/3: %d, %f" % (hit_twice, (hit_twice / wrong_case_num)))
+    print("hit 1/3: %d, %f" % (hit_once, (hit_once / wrong_case_num)))
     total = hit_all + hit_twice + hit_once
-    print("can hit: %d, %f" % (total, (total / len(replies))))
+    print("can hit: %d, %f" % (total, (total / wrong_case_num)))
