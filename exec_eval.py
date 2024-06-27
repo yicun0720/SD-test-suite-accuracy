@@ -13,6 +13,8 @@ import time
 import pickle as pkl
 import subprocess
 from itertools import chain
+import sqlglot
+from sqlglot.expressions import Literal
 
 
 
@@ -174,6 +176,18 @@ def postprocess(query: str) -> str:
     return query
 
 
+def order_matters(sql):
+    parsed_sql = sqlglot.parse(sql)[0]
+    if 'order' in parsed_sql.args.keys() and parsed_sql.args['order'] is not None:
+        if 'limit' in parsed_sql.args.keys() and parsed_sql.args['limit'] is not None:
+            limit_exp = parsed_sql.args['limit'].expression
+            if type(limit_exp) is Literal and limit_exp.name == '1':
+                return False
+        return True
+
+    return False
+
+
 # approximate whether p_str and g_str are semantically equivalent
 # db is the database path
 # we are going to evaluate whether they are equivalent in all the databases
@@ -194,7 +208,8 @@ def eval_exec_match(db: str, p_str: str, g_str: str, plug_value: bool, keep_dist
     # if there is order by in query, then we assume order of the rows matter
     # order by might also be used to find the max/min instead of sorting,
     # but in that case the result mostly only contains one row and hence order_matters does not make a difference
-    order_matters = 'order by' in g_str.lower()
+    # order_matters_option = 'order by' in g_str.lower()
+    order_matters_option = order_matters(g_str)
 
     # find all databases in the same directory
     db_dir = os.path.dirname(db)
@@ -232,7 +247,7 @@ def eval_exec_match(db: str, p_str: str, g_str: str, plug_value: bool, keep_dist
                 pred_passes = 0
 
             # if denotations are not equivalent, the prediction must be wrong
-            elif not result_eq(g_denotation, p_denotation, order_matters=order_matters):
+            elif not result_eq(g_denotation, p_denotation, order_matters=order_matters_option):
                 pred_passes = 0
             if pred_passes == 0:
                 break
