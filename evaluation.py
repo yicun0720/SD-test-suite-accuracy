@@ -567,19 +567,21 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
             p, g = pg
             p_str = p[0]
             p_str = p_str.replace("value", "1")
-            g_str, db = g
-            db_name = db
-            db = os.path.join(db_dir, db, db + ".sqlite")
+            g_str, db_name = g
+            db = os.path.join(db_dir, db_name, db_name + ".sqlite")
+            if not os.path.exists(db):
+                db = os.path.join(db_dir, db_name, db_name + "_0.sqlite")
+
             schema = Schema(get_schema(db))
-            g_sql = get_sql(schema, g_str)
-            hardness = evaluator.eval_hardness(g_sql)
+            # g_sql = get_sql(schema, g_str)
+            # hardness = evaluator.eval_hardness(g_sql)
             if idx > 3:
                 idx = "> 4"
             else:
                 idx += 1
             turn_id = "turn " + str(idx)
             scores[turn_id]['count'] += 1
-            scores[hardness]['count'] += 1
+            # scores[hardness]['count'] += 1
             scores['all']['count'] += 1
 
             try:
@@ -610,57 +612,57 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
                                              keep_distinct=keep_distinct, progress_bar_for_each_datapoint=progress_bar_for_each_datapoint)
                 print(str(exec_score) + "\t" + p_str + "\t" + g_str)
                 if exec_score:
-                    scores[hardness]['exec'] += 1
+                    # scores[hardness]['exec'] += 1
                     scores[turn_id]['exec'] += 1
                     scores['all']['exec'] += 1
                     turn_scores['exec'].append(1)
                 else:
                     turn_scores['exec'].append(0)
 
-            if etype in ["all", "match"]:
-                # rebuild sql for value evaluation
-                kmap = kmaps[db_name]
-                g_valid_col_units = build_valid_col_units(g_sql['from']['table_units'], schema)
-                g_sql = rebuild_sql_val(g_sql)
-                g_sql = rebuild_sql_col(g_valid_col_units, g_sql, kmap)
-                p_valid_col_units = build_valid_col_units(p_sql['from']['table_units'], schema)
-                p_sql = rebuild_sql_val(p_sql)
-                p_sql = rebuild_sql_col(p_valid_col_units, p_sql, kmap)
-                exact_score = evaluator.eval_exact_match(p_sql, g_sql)
-                partial_scores = evaluator.partial_scores
-                if exact_score == 0:
-                    turn_scores['exact'].append(0)
-                    print("{} pred: {}".format(hardness, p_str))
-                    print("{} gold: {}".format(hardness, g_str))
-                    print("")
-                else:
-                    turn_scores['exact'].append(1)
-                scores[turn_id]['exact'] += exact_score
-                scores[hardness]['exact'] += exact_score
-                scores['all']['exact'] += exact_score
-                for type_ in partial_types:
-                    if partial_scores[type_]['pred_total'] > 0:
-                        scores[hardness]['partial'][type_]['acc'] += partial_scores[type_]['acc']
-                        scores[hardness]['partial'][type_]['acc_count'] += 1
-                    if partial_scores[type_]['label_total'] > 0:
-                        scores[hardness]['partial'][type_]['rec'] += partial_scores[type_]['rec']
-                        scores[hardness]['partial'][type_]['rec_count'] += 1
-                    scores[hardness]['partial'][type_]['f1'] += partial_scores[type_]['f1']
-                    if partial_scores[type_]['pred_total'] > 0:
-                        scores['all']['partial'][type_]['acc'] += partial_scores[type_]['acc']
-                        scores['all']['partial'][type_]['acc_count'] += 1
-                    if partial_scores[type_]['label_total'] > 0:
-                        scores['all']['partial'][type_]['rec'] += partial_scores[type_]['rec']
-                        scores['all']['partial'][type_]['rec_count'] += 1
-                    scores['all']['partial'][type_]['f1'] += partial_scores[type_]['f1']
-
-                entries.append({
-                    'predictSQL': p_str,
-                    'goldSQL': g_str,
-                    'hardness': hardness,
-                    'exact': exact_score,
-                    'partial': partial_scores
-                })
+            # if etype in ["all", "match"]:
+            #     # rebuild sql for value evaluation
+            #     kmap = kmaps[db_name]
+            #     g_valid_col_units = build_valid_col_units(g_sql['from']['table_units'], schema)
+            #     g_sql = rebuild_sql_val(g_sql)
+            #     g_sql = rebuild_sql_col(g_valid_col_units, g_sql, kmap)
+            #     p_valid_col_units = build_valid_col_units(p_sql['from']['table_units'], schema)
+            #     p_sql = rebuild_sql_val(p_sql)
+            #     p_sql = rebuild_sql_col(p_valid_col_units, p_sql, kmap)
+            #     exact_score = evaluator.eval_exact_match(p_sql, g_sql)
+            #     partial_scores = evaluator.partial_scores
+            #     if exact_score == 0:
+            #         turn_scores['exact'].append(0)
+            #         print("{} pred: {}".format(hardness, p_str))
+            #         print("{} gold: {}".format(hardness, g_str))
+            #         print("")
+            #     else:
+            #         turn_scores['exact'].append(1)
+            #     scores[turn_id]['exact'] += exact_score
+            #     scores[hardness]['exact'] += exact_score
+            #     scores['all']['exact'] += exact_score
+            #     for type_ in partial_types:
+            #         if partial_scores[type_]['pred_total'] > 0:
+            #             scores[hardness]['partial'][type_]['acc'] += partial_scores[type_]['acc']
+            #             scores[hardness]['partial'][type_]['acc_count'] += 1
+            #         if partial_scores[type_]['label_total'] > 0:
+            #             scores[hardness]['partial'][type_]['rec'] += partial_scores[type_]['rec']
+            #             scores[hardness]['partial'][type_]['rec_count'] += 1
+            #         scores[hardness]['partial'][type_]['f1'] += partial_scores[type_]['f1']
+            #         if partial_scores[type_]['pred_total'] > 0:
+            #             scores['all']['partial'][type_]['acc'] += partial_scores[type_]['acc']
+            #             scores['all']['partial'][type_]['acc_count'] += 1
+            #         if partial_scores[type_]['label_total'] > 0:
+            #             scores['all']['partial'][type_]['rec'] += partial_scores[type_]['rec']
+            #             scores['all']['partial'][type_]['rec_count'] += 1
+            #         scores['all']['partial'][type_]['f1'] += partial_scores[type_]['f1']
+            #
+            #     entries.append({
+            #         'predictSQL': p_str,
+            #         'goldSQL': g_str,
+            #         'hardness': hardness,
+            #         'exact': exact_score,
+            #         'partial': partial_scores
+            #     })
 
         if all(v == 1 for v in turn_scores["exec"]):
             scores['joint_all']['exec'] += 1
