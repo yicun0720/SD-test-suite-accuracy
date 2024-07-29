@@ -177,7 +177,7 @@ def postprocess(query: str) -> str:
 
 
 def order_matters(sql):
-    parsed_sql = sqlglot.parse(sql)[0]
+    parsed_sql = sqlglot.parse(sql, read="sqlite")[0]
     if 'order' in parsed_sql.args.keys() and parsed_sql.args['order'] is not None:
         if 'limit' in parsed_sql.args.keys() and parsed_sql.args['limit'] is not None:
             limit_exp = parsed_sql.args['limit'].expression
