@@ -1,0 +1,297 @@
+SELECT max(`free meal count (k-12)`) / max(`enrollment (k-12)`) FROM frpm WHERE `county name` = 'Alameda';
+SELECT `free meal count (ages 5-17)` / `enrollment (ages 5-17)` FROM frpm JOIN schools ON frpm.cdscode = schools.cdscode WHERE schools.edopsname = 'Continuation School' ORDER BY `free meal count (ages 5-17)` / `enrollment (ages 5-17)` ASC LIMIT 3;
+SELECT schools.zip FROM frpm INNER JOIN schools ON frpm.cdscode = schools.cdscode WHERE frpm.`charter school (y/n)` = 1 AND frpm.`county name` = 'Fresno' AND schools.county = 'Fresno';
+SELECT mailstreet FROM schools WHERE cdscode = (SELECT cdscode FROM frpm WHERE `frpm count (k-12)` = (SELECT max(`frpm count (k-12)`) FROM frpm));
+SELECT schools.phone FROM schools INNER JOIN frpm ON schools.cdscode = frpm.cdscode WHERE frpm.`charter school (y/n)` = 1 AND frpm.`charter funding type` = 'Directly funded' AND schools.fundingtype = 'Directly funded' AND schools.charter = 1;
+SELECT schools.school FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds WHERE schools.magnet = 1 AND satscores.numtsttakr > 500;
+SELECT phone FROM schools WHERE cdscode = (SELECT cds FROM satscores WHERE numtsttakr >= 1500 ORDER BY numtsttakr DESC LIMIT 1);
+SELECT count(DISTINCT schools.cdscode) FROM satscores INNER JOIN schools ON satscores.cds = schools.cdscode WHERE satscores.avgscrmath > 560 AND schools.charter = 1;
+SELECT frpm.`frpm count (ages 5-17)` FROM frpm INNER JOIN satscores ON frpm.cdscode = satscores.cds WHERE satscores.avgscrread = (SELECT max(avgscrread) FROM satscores);
+SELECT frpm.cdscode FROM frpm INNER JOIN schools ON frpm.cdscode = schools.cdscode WHERE frpm.`enrollment (k-12)` + frpm.`enrollment (ages 5-17)` > 500;
+SELECT max(`free meal count (ages 5-17)`) FROM frpm WHERE `enrollment (ages 5-17)` / `free meal count (ages 5-17)` > 0.3;
+SELECT schools.phone FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds ORDER BY satscores.numge1500 / satscores.numtsttakr DESC LIMIT 3;
+SELECT ncesschool FROM schools INNER JOIN frpm ON schools.cdscode = frpm.cdscode WHERE frpm.`enrollment (ages 5-17)` IS NOT NULL ORDER BY frpm.`enrollment (ages 5-17)` DESC LIMIT 5;
+SELECT satscores.dname FROM satscores WHERE satscores.rtype = 'D' ORDER BY satscores.avgscrread DESC LIMIT 1;
+SELECT count(*) FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds WHERE schools.city = 'Fresno' AND satscores.numtsttakr <= 250;
+SELECT schools.phone FROM schools JOIN satscores ON schools.cdscode = satscores.cds WHERE satscores.avgscrmath = (SELECT max(avgscrmath) FROM satscores);
+SELECT count(schools.school) FROM frpm INNER JOIN schools ON frpm.cdscode = schools.cdscode WHERE frpm.`low grade` = '9' AND frpm.`high grade` = '12' AND schools.county = 'Amador';
+SELECT schools.school FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds WHERE schools.county = 'Contra Costa' ORDER BY satscores.numtsttakr DESC LIMIT 1;
+sql placeholder
+SELECT sname FROM satscores INNER JOIN frpm ON satscores.cds = frpm.cdscode WHERE frpm.`free meal count (k-12)` / frpm.`enrollment (k-12)` > 0.1 AND satscores.numge1500 > 0;
+SELECT sname, avgscrwrite FROM satscores INNER JOIN schools ON schools.cdscode = satscores.cds WHERE schools.closeddate > '1991-01-01' OR schools.closeddate < '2000-01-01';
+SELECT schools.school, schools.doc FROM schools INNER JOIN frpm ON schools.cdscode = frpm.cdscode WHERE (frpm.`enrollment (k-12)` - frpm.`enrollment (ages 5-17)`) > (SELECT avg((frpm.`enrollment (k-12)` - frpm.`enrollment (ages 5-17)`)) FROM frpm);
+SELECT schools.opendate FROM schools WHERE schools.edopsname = 'K-12' ORDER BY schools.opendate ASC LIMIT 1;
+SELECT schools.city FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds ORDER BY satscores.enroll12 ASC LIMIT 5;
+SELECT frpm.`free meal count (k-12)` / frpm.`enrollment (k-12)` AS eligible_free_rate FROM frpm JOIN schools ON frpm.cdscode = schools.cdscode WHERE frpm.`enrollment (k-12)` = (SELECT max(enroll12) FROM satscores WHERE rtype = 'D') AND schools.school = (SELECT max(sname) FROM satscores WHERE rtype = 'D');
+SELECT `frpm count (k-12)` / `enrollment (k-12)` FROM frpm INNER JOIN schools ON frpm.cdscode = schools.cdscode WHERE schools.soc = '66' GROUP BY frpm.cdscode ORDER BY `free meal count (k-12)` DESC LIMIT 5;
+SELECT frpm.`school name`, frpm.`free meal count (ages 5-17)` FROM frpm WHERE frpm.`free meal count (ages 5-17)` >= 1900 AND frpm.`free meal count (ages 5-17)` <= 2000;
+SELECT schools.admfname1, schools.admfname2, schools.admfname3 FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds ORDER BY satscores.numge1500 DESC LIMIT 3;
+SELECT street, city, state, zip FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds WHERE satscores.numge1500 / satscores.numtsttakr = (SELECT min(satscores.numge1500 / satscores.numtsttakr) FROM satscores);
+SELECT avg(numtsttakr) FROM satscores INNER JOIN schools ON satscores.cds = schools.cdscode WHERE schools.opendate LIKE '1980%';
+SELECT schools.school FROM schools WHERE schools.virtual = 'F' ORDER BY schools.county LIMIT 5;
+SELECT frpm.`school type` FROM satscores INNER JOIN frpm ON satscores.cds = frpm.cdscode WHERE satscores.avgscrmath = (SELECT max(avgscrmath) FROM satscores);
+SELECT avg(satscores.avgscrmath), schools.county FROM satscores INNER JOIN schools ON satscores.cds = schools.cdscode GROUP BY schools.county ORDER BY avg(satscores.avgscrmath) ASC LIMIT 1;
+SELECT schools.city, avg(satscores.avgscrwrite) FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds WHERE satscores.numtsttakr >= 1500 GROUP BY schools.city;
+SELECT * FROM schools WHERE doc = 31 AND soctype = 'State Special Schools';
+SELECT count(schools.cdscode) / 12 FROM schools INNER JOIN frpm ON frpm.cdscode = schools.cdscode WHERE schools.doc = '52' AND schools.county = 'Alameda' AND schools.doctype = 'State Special Schools' AND frpm.`county code` = '01' AND frpm.`district code` = 10017;
+SELECT cast(sum(CASE WHEN schools.doc = '54' THEN 1 ELSE 0 END) AS REAL) / cast(sum(CASE WHEN schools.doc = '52' THEN 1 ELSE 0 END) AS REAL) FROM schools INNER JOIN frpm ON schools.cdscode = frpm.cdscode INNER JOIN satscores ON schools.cdscode = satscores.cds WHERE frpm.`county code` = '54';
+SELECT DISTINCT schools.county, schools.school, schools.closeddate FROM schools WHERE schools.statustype = 'Closed' GROUP BY schools.county, schools.school, schools.closeddate ORDER BY count(*) DESC LIMIT 1;
+SELECT schools.street FROM schools JOIN satscores ON schools.cdscode = satscores.cds WHERE schools.soctype = 'K-12 Schools (Public)' AND satscores.avgscrmath = (SELECT max(avgscrmath) FROM satscores WHERE satscores.rtype = 'D') LIMIT 7;
+SELECT schools.mailstreet, schools.school FROM schools INNER JOIN satscores ON schools.cdscode = satscores.cds WHERE satscores.rtype = 'D' AND satscores.avgscrread = ( SELECT min(avgscrread) FROM satscores );
+SELECT sum(satscores.numtsttakr) FROM satscores INNER JOIN schools ON satscores.cds = schools.cdscode WHERE schools.mailcity = 'Fresno';
+SELECT cast(count(CASE WHEN schools.county = 'Colusa' THEN schools.school ELSE NULL END) AS REAL) / cast(count(CASE WHEN schools.county = 'Humboldt' THEN schools.school ELSE NULL END) AS REAL) FROM schools WHERE schools.mailstate = 'CA';
+SELECT schools.phone, schools.ext FROM schools WHERE schools.zip = 95203-3704;
+SELECT account.account_id FROM account INNER JOIN loan ON account.account_id = loan.account_id WHERE loan.date = '1997-01-01' ORDER BY loan.amount ASC LIMIT 1;
+SELECT account_id FROM loan WHERE duration > 12 ORDER BY amount DESC LIMIT 1;
+SELECT account.account_id FROM account WHERE account.date = '1995-01-01';
+SELECT DISTINCT account_id FROM account WHERE date < '1997-01-01' AND account_id IN (SELECT account_id FROM trans WHERE amount > 3000);
+SELECT bond_type FROM bond GROUP BY bond_type HAVING count(*) = (SELECT max(total) FROM (SELECT count(*) AS total FROM bond GROUP BY bond_type) t2);
+SELECT molecule.molecule_id FROM molecule INNER JOIN atom ON molecule.molecule_id = atom.molecule_id WHERE atom.element = 'c';
+SELECT atom.element FROM atom INNER JOIN connected ON atom.atom_id = connected.atom_id WHERE connected.bond_id = 'TR004_8_9';
+SELECT element FROM atom WHERE atom_id IN ( SELECT atom_id FROM connected WHERE bond_id IN ( SELECT bond_id FROM bond WHERE bond_type = '=' ) );
+SELECT DISTINCT molecule.label FROM molecule INNER JOIN atom ON molecule.molecule_id = atom.molecule_id WHERE atom.element != 'sn';
+sql placeholder
+SELECT name FROM cards WHERE edhrecrank < 100 AND frameversion = 2015;
+SELECT cards.name FROM cards INNER JOIN foreign_data ON cards.uuid = foreign_data.uuid WHERE foreign_data.language = 'Japanese' AND cards.isalternative = 1;
+SELECT count(DISTINCT types) FROM cards WHERE artist = 'Aaron Boyd';
+SELECT language FROM set_translations WHERE setcode = (SELECT setcode FROM cards WHERE name = 'Angel of Mercy');
+SELECT DISTINCT cards.artist FROM cards INNER JOIN foreign_data ON cards.uuid = foreign_data.uuid WHERE foreign_data.language = 'Phyrexian';
+SELECT count(*) FROM foreign_data INNER JOIN cards ON foreign_data.uuid = cards.uuid WHERE foreign_data.language = 'German' AND cards.isreprint = 1;
+SELECT users.displayname FROM users WHERE users.displayname IN ('Harlan', 'Jarrod Dixon') ORDER BY users.reputation DESC LIMIT 1;
+sql placeholder
+SELECT count(*) FROM users WHERE lastaccessdate > '2014-09-01';
+SELECT users.displayname FROM users WHERE users.views = (SELECT max(users.views) FROM users);
+SELECT count(*) FROM users WHERE users.upvotes > 100 AND users.downvotes > 1;
+sql placeholder
+SELECT count(posts.id) FROM users INNER JOIN posts ON users.id = posts.owneruserid WHERE users.displayname = 'csgillespie';
+SELECT posts.title FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE users.displayname = 'csgillespie';
+SELECT users.displayname FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE posts.title = 'Eliciting priors from experts';
+SELECT posts.title FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE users.displayname = "csgillespie" ORDER BY posts.viewcount DESC LIMIT 1;
+SELECT users.displayname FROM posts posts INNER JOIN users users ON posts.owneruserid = users.id GROUP BY users.displayname ORDER BY posts.favoritecount DESC LIMIT 1;
+SELECT sum(posts.commentcount) FROM users INNER JOIN posts ON users.id = posts.owneruserid WHERE users.displayname = 'csgillespie';
+SELECT posts.answercount FROM posts WHERE posts.owneruserid = (SELECT users.id FROM users WHERE users.displayname = 'csgillespie') ORDER BY posts.answercount DESC LIMIT 1;
+SELECT users.displayname FROM posts INNER JOIN users ON posts.lasteditoruserid = users.id WHERE posts.title = 'Examples for teaching: Correlation does not mean causation';
+SELECT count(posts.id) FROM posts WHERE posts.owneruserid IN (SELECT users.id FROM users WHERE users.displayname = 'csgillespie') AND posts.parentid IS NULL;
+SELECT users.displayname FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE closeddate IS NOT NULL;
+SELECT count(posts.id) FROM users INNER JOIN posts ON users.id = posts.owneruserid WHERE users.age > 65 AND posts.score >= 20;
+SELECT users.location FROM users INNER JOIN posts ON posts.owneruserid = users.id WHERE posts.title = 'Eliciting priors from experts';
+SELECT posts.body FROM tags INNER JOIN posts ON tags.excerptpostid = posts.id WHERE tags.tagname = 'bayesian';
+SELECT posts.body FROM tags INNER JOIN posts ON tags.excerptpostid = posts.id ORDER BY tags.count DESC LIMIT 1;
+SELECT count(DISTINCT id) FROM badges WHERE userid IN (SELECT id FROM users WHERE displayname = 'csgillespie');
+SELECT badges.name FROM badges INNER JOIN users ON badges.userid = users.id WHERE users.displayname = 'csgillespie';
+SELECT count(badges.id) FROM badges WHERE badges.userid = (SELECT users.id FROM users WHERE users.displayname = 'csgillespie') AND strftime('%Y', badges.date) = '2011';
+SELECT users.displayname FROM users INNER JOIN badges ON users.id = badges.userid GROUP BY badges.userid ORDER BY count(badges.id) DESC LIMIT 1;
+SELECT AVG(posts.score) FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE users.displayname = 'csgillespie';
+SELECT avg(badge_count) FROM (SELECT count(b.id) AS badge_count FROM badges b JOIN users u ON b.userid = u.id WHERE u.views > 200 GROUP BY b.userid);
+SELECT cast(sum(CASE WHEN posts.score > 5 THEN 1 ELSE 0 END) AS REAL) * 100 / count(posts.id) FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE users.age > 65;
+SELECT count(votes.id) FROM votes WHERE votes.creationdate = '2010-07-19' AND votes.userid = 58;
+SELECT creationdate FROM votes GROUP BY creationdate ORDER BY count(id) DESC LIMIT 1;
+SELECT count(*) FROM badges WHERE badges.name = 'Revival';
+SELECT posts.title FROM posts INNER JOIN comments ON posts.id = comments.postid WHERE comments.score = (SELECT Max(comments.score) FROM comments);
+SELECT count(comments.postid) FROM posts INNER JOIN comments ON posts.id = comments.postid WHERE posts.viewcount = 1910;
+SELECT posts.favoritecount FROM posts INNER JOIN comments ON posts.id = comments.postid WHERE comments.userid = '3025' AND comments.creationdate = '2014/4/23 20:29:39.0';
+SELECT text FROM comments WHERE postid = 107829 AND id = 1;
+SELECT CASE WHEN closeddate IS NULL THEN 'NOT well-finished' WHEN closeddate IS NOT NULL THEN 'well-finished' END wellfinished FROM POSTS WHERE id = 23853;
+SELECT users.reputation FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE posts.id = '65041';
+SELECT count(posts.id) FROM users INNER JOIN posts ON users.displayname = posts.ownerdisplayname WHERE users.displayname = 'Tiago Pasqualini';
+SELECT users.displayname FROM votes INNER JOIN users ON votes.userid = users.id WHERE votes.id = '6347';
+SELECT COUNT(*) FROM votes WHERE postid IN (SELECT id FROM posts WHERE title LIKE '%data visualization%');
+SELECT badges.name FROM badges INNER JOIN users ON badges.userid = users.id WHERE users.displayname = 'DatEpicCoderGuyWhoPrograms';
+SELECT viewcount FROM posts WHERE title = 'Integration of Weka and/or RapidMiner into Informatica PowerCenter/Developer';
+SELECT comments.text FROM comments WHERE comments.score = 17;
+SELECT badges.name FROM users JOIN badges ON users.id = badges.userid WHERE users.displayname = 'SilentGhost';
+SELECT users.displayname FROM users INNER JOIN comments ON users.id = comments.userid WHERE comments.text LIKE 'thank you user93';
+SELECT comments.text FROM comments INNER JOIN users ON comments.userid = users.id WHERE users.displayname = 'A Lion';
+SELECT users.displayname, users.reputation FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE posts.title = 'Understanding what Dassault iSight is doing?';
+SELECT users.displayname FROM badges INNER JOIN users ON badges.userid = users.id WHERE badges.name = 'Necromancer';
+SELECT sum(posts.score), users.websiteurl FROM posts INNER JOIN users ON posts.lasteditoruserid = users.id WHERE users.displayname = 'Yevgeny' GROUP BY users.websiteurl;
+SELECT sum(votes.bountyamount) FROM votes INNER JOIN posts ON posts.id = votes.postid WHERE posts.title LIKE '%data%';
+SELECT count(comments.id) FROM comments WHERE comments.userid = 13;
+SELECT users.id FROM users WHERE users.reputation = (SELECT max(reputation) FROM users);
+SELECT users.id FROM users WHERE users.views = (SELECT min(users.views) FROM users);
+sql placeholder
+sql placeholder
+SELECT users.id, users.reputation FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE posts.id = 1;
+SELECT badges.name FROM comments INNER JOIN badges ON comments.userid = badges.userid GROUP BY comments.userid ORDER BY count(*) DESC LIMIT 1;
+SELECT count(DISTINCT users.id) FROM users users JOIN badges badges ON users.id = badges.userid WHERE users.location = 'India';
+SELECT posthistorytypeid, count(DISTINCT userid) FROM posthistory WHERE postid = 3720 GROUP BY posthistorytypeid;
+SELECT count(badges.name) FROM users INNER JOIN badges ON users.id = badges.userid WHERE badges.name = 'Announcer';
+SELECT badges.name FROM badges INNER JOIN users ON badges.userid = users.id WHERE badges.date = '2010-07-19 19:39:08.0';
+SELECT COUNT(*) FROM comments WHERE score > 60;
+SELECT text FROM comments WHERE creationdate = '2010-07-19 19:16:14.0';
+SELECT count(*) FROM posts WHERE score = 10;
+SELECT badges.name FROM badges INNER JOIN users ON badges.userid = users.id WHERE users.reputation = ( SELECT max(reputation) FROM users );
+SELECT users.reputation FROM users JOIN badges ON users.id = badges.userid WHERE badges.date = '2010-07-19 19:39:08.0';
+SELECT badges.name FROM badges JOIN users ON badges.userid = users.id WHERE users.displayname = 'Pierre';
+SELECT badges.date FROM badges INNER JOIN users ON badges.userid = users.id WHERE users.location = 'Rochester, NY';
+SELECT cast(count(users.displayname = 'Teacher') AS REAL) * 100 / count(users.id) FROM users INNER JOIN badges ON users.id = badges.userid WHERE badges.name = 'Teacher';
+SELECT cast(count(users.age) AS REAL) * 100 / ( SELECT count(userid) FROM badges WHERE name = 'Organizer' ), users.displayname FROM badges INNER JOIN users ON badges.userid = users.id WHERE badges.name = 'Organizer' AND users.age BETWEEN 13 AND 18;
+SELECT comments.score FROM comments INNER JOIN posts ON comments.postid = posts.id WHERE posts.creaiondate = '2010-07-19 19:19:56.0';
+SELECT comments.text FROM comments INNER JOIN posts ON comments.postid = posts.id WHERE comments.creationdate = '2010-07-19 19:37:33.0';
+SELECT users.age FROM users INNER JOIN badges ON users.id = badges.userid WHERE users.location = 'Vienna, Austria';
+SELECT count(badges.userid) FROM badges JOIN users ON badges.userid = users.id WHERE badges.name = 'Supporter' AND users.age BETWEEN 19 AND 65;
+SELECT users.views FROM badges INNER JOIN users ON badges.userid = users.id WHERE badges.date = '2010-07-19 19:39:08.0';
+SELECT badges.name FROM badges INNER JOIN users ON badges.userid = users.id WHERE users.reputation = (SELECT min(reputation) FROM users);
+SELECT badges.name FROM users users JOIN badges badges ON users.id = badges.userid WHERE users.displayname = 'Sharpie';
+SELECT count(badges.name) FROM badges INNER JOIN users ON badges.userid = users.id WHERE badges.name = 'Supporter' AND users.age > 65;
+SELECT displayname FROM users WHERE id = 30;
+SELECT count(users.location) FROM users WHERE users.location = 'New York';
+SELECT count(*) FROM votes WHERE strftime('%Y', votes.creationdate) = '2010';
+SELECT count(*) FROM users WHERE age BETWEEN 19 AND 65;
+sql placeholder
+SELECT count(posts.id) FROM posts INNER JOIN votes ON posts.id = votes.postid INNER JOIN users ON votes.userid = users.id WHERE users.displayname = 'Matt Parker' AND votes.postid > 4;
+SELECT count(*) FROM posts JOIN comments ON posts.id = comments.postid JOIN users ON comments.userid = users.id WHERE users.displayname = 'Neil McGuigan' AND posts.score < 60;
+SELECT users.displayname FROM badges INNER JOIN users ON badges.userid = users.id WHERE badges.name = 'Organizer';
+sql placeholder
+SELECT users.displayname , users.age FROM users WHERE users.views = ( SELECT max(views) FROM users );
+SELECT lasteditdate, lasteditoruserid FROM posts WHERE title = 'Detecting a given face in a database of facial images';
+SELECT count(comments.score) FROM comments WHERE comments.userid = 13 AND comments.score < 60;
+sql placeholder
+SELECT users.lastaccessdate , users.location FROM users INNER JOIN badges ON users.id = badges.userid WHERE badges.name = 'Outliers';
+SELECT users.displayname FROM posts INNER JOIN users ON posts.owneruserid = users.id ORDER BY posts.viewcount DESC LIMIT 1;
+SELECT users.displayname , users.location FROM tags INNER JOIN posts ON tags.excerptpostid = posts.id INNER JOIN users ON posts.owneruserid = users.id WHERE tagname = 'hypothesis-testing';
+SELECT users.displayname FROM posts JOIN users ON posts.owneruserid = users.id WHERE posts.parentid IS NOT NULL AND posts.score = (SELECT max(score) FROM posts WHERE parentid = posts.parentid);
+SELECT users.displayname, users.websiteurl FROM users JOIN votes ON users.id = votes.userid WHERE votetypeid = 8 AND votes.bountyamount = (SELECT MAX(bountyamount) FROM votes WHERE votetypeid = 8);
+SELECT title FROM posts ORDER BY viewcount DESC LIMIT 5;
+SELECT count(*) FROM tags WHERE count BETWEEN 5000 AND 7000;
+SELECT owneruserid FROM posts ORDER BY favoritecount DESC LIMIT 1;
+SELECT age FROM users WHERE reputation = (SELECT MAX(reputation) FROM users);
+sql placeholder
+SELECT id FROM users WHERE age = (SELECT MIN(age) FROM users);
+SELECT SUM(score) FROM posts WHERE lasactivitydate LIKE '2010-07-19%';
+SELECT cast(sum(postlinks.id) AS REAL) / 12 FROM postlinks INNER JOIN posts ON postlinks.postid = posts.id WHERE posts.answercount <= 2 AND strftime('%Y', postlinks.creationdate) = '2010';
+SELECT posts.id FROM posts JOIN votes ON posts.id = votes.postid WHERE votes.userid = 1465 GROUP BY posts.id ORDER BY sum(votes.bountyamount) DESC LIMIT 1;
+SELECT posts.title FROM posts INNER JOIN postlinks ON posts.id = postlinks.postid WHERE postlinks.creationdate = (SELECT min(creationdate) FROM postlinks);
+SELECT users.displayname FROM badges INNER JOIN users ON badges.userid = users.id GROUP BY users.id ORDER BY count(badges.name) DESC LIMIT 1;
+SELECT MIN(creationdate) FROM votes WHERE votes.userid = (SELECT users.id FROM users WHERE users.displayname = 'chl');
+SELECT MIN(creaiondate) FROM posts WHERE owneruserid = (SELECT MIN(id) FROM users);
+SELECT users.displayname FROM users INNER JOIN badges ON badges.userid = users.id WHERE badges.name = 'Autobiographer' ORDER BY badges.date LIMIT 1;
+SELECT count(DISTINCT users.id) FROM users INNER JOIN posts ON users.id = posts.owneruserid WHERE posts.favoritecount >= 4 AND users.location = 'United Kingdom';
+SELECT AVG(postid) FROM votes WHERE userid IN (SELECT id FROM users WHERE age = (SELECT MAX(age) FROM users));
+SELECT users.displayname FROM users users WHERE users.reputation = ( SELECT max(reputation) FROM users );
+SELECT count(users.id) FROM users WHERE users.reputation > 2000 AND users.views > 1000;
+SELECT users.displayname FROM users WHERE users.age BETWEEN 19 AND 65;
+sql placeholder
+SELECT posts.id, posts.title FROM posts INNER JOIN users ON posts.owneruserid = users.id WHERE users.displayname = 'Harvey Motulsky' ORDER BY posts.viewcount DESC LIMIT 1;
+SELECT id, title FROM posts ORDER BY score DESC LIMIT 1;
+SELECT AVG(posts.score) FROM posts INNER JOIN users ON users.id = posts.owneruserid WHERE users.displayname = 'Stephen Turner';
+sql placeholder
+sql placeholder
+sql placeholder
+SELECT (SELECT count(id) FROM users WHERE age BETWEEN 13 and 18) / (SELECT count(id) FROM users) as percentage;
+SELECT sum(posts.viewcount) FROM posts WHERE posts.viewcount > (SELECT AVG(viewcount) FROM posts);
+SELECT count(*) FROM comments WHERE postid = (SELECT id FROM posts ORDER BY score DESC LIMIT 1);
+SELECT count(posts.id) FROM posts WHERE posts.viewcount > 35000 AND posts.commentcount = 0;
+SELECT name FROM badges WHERE userid = ( SELECT id FROM users WHERE displayname = 'Emmett' ) ORDER BY date DESC LIMIT 1;
+SELECT count(users.id) FROM users WHERE users.age BETWEEN 19 AND 65 AND users.upvotes > 5000;
+sql placeholder
+SELECT COUNT(posts.id) AS post_count, COUNT(comments.id) AS comment_count FROM users JOIN posts ON users.id = posts.owneruserid JOIN comments ON posts.id = comments.postid WHERE users.creationdate = (SELECT MAX(creationdate) FROM users);
+SELECT count(id) FROM badges WHERE name = 'Citizen Patrol';
+SELECT count(posts.id) FROM tags INNER JOIN posts ON tags.id = posts.tags WHERE tags.tagname = 'careers';
+SELECT users.reputation , users.views FROM users WHERE users.displayname = 'Jarrod Dixon';
+SELECT count(comments.id), count(posts.id) FROM posts INNER JOIN comments ON posts.id = comments.postid WHERE posts.title = 'Clustering 1D data';
+SELECT users.creationdate FROM users WHERE users.displayname = 'IrishStat';
+SELECT count(votes.postid) FROM votes WHERE votes.bountyamount >= 30;
+SELECT count(DISTINCT posts.id) FROM posts WHERE posts.score < 20;
+SELECT count(DISTINCT tags.id) FROM tags WHERE tags.id < 15 AND tags.count <= 20;
+SELECT tags.excerptpostid, tags.wikipostid FROM tags WHERE tags.tagname = 'sample';
+SELECT users.reputation, users.upvotes FROM comments INNER JOIN users ON comments.userid = users.id WHERE comments.text = 'fine, you win :)';
+SELECT posthistory.text FROM posthistory INNER JOIN posts ON posthistory.postid = posts.id WHERE posts.title LIKE '%linear regression%' AND posthistory.comment LIKE '%regression%';
+SELECT text FROM comments WHERE postid IN (SELECT id FROM posts WHERE viewcount BETWEEN 100 AND 150) ORDER BY score DESC LIMIT 1;
+SELECT users.creationdate, users.age FROM users WHERE users.websiteurl LIKE '%http://%';
+SELECT count(DISTINCT posts.id) FROM posts posts JOIN comments comments ON posts.id = comments.postid WHERE comments.score = 0 AND posts.viewcount < 5;
+SELECT count(DISTINCT comments.id) FROM comments JOIN posts ON comments.postid = posts.id WHERE posts.commentcount = 1 AND comments.score = 0;
+SELECT count(*) FROM superhero WHERE id IN (SELECT hero_id FROM hero_power WHERE power_id IN (SELECT id FROM superpower WHERE power_name = 'Super Strength'));
+SELECT count(*) FROM superhero sh JOIN hero_power hp ON sh.id = hp.hero_id JOIN superpower sp ON hp.power_id = sp.id WHERE sp.power_name = 'Super Strength' AND sh.height_cm > 200;
+SELECT full_name FROM superhero GROUP BY full_name HAVING COUNT(full_name) > 15;
+SELECT count(superhero.id) FROM superhero INNER JOIN colour ON colour.id = superhero.eye_colour_id WHERE colour.colour = 'Blue';
+SELECT colour FROM colour WHERE id IN (SELECT superhero.skin_colour_id FROM superhero WHERE superhero.superhero_name = 'Apocalypse');
+SELECT count(superhero.id) FROM superhero INNER JOIN hero_power ON superhero.id = hero_power.hero_id INNER JOIN superpower ON hero_power.power_id = superpower.id INNER JOIN colour ON superhero.eye_colour_id = colour.id WHERE colour.colour = 'Blue' AND superpower.power_name = 'Agility';
+SELECT superhero.superhero_name FROM superhero INNER JOIN hero_attribute ON superhero.id = hero_attribute.hero_id INNER JOIN hero_power ON superhero.id = hero_power.hero_id INNER JOIN superpower ON hero_power.power_id = superpower.id INNER JOIN colour ON superhero.eye_colour_id = colour.id AND superhero.hair_colour_id = colour.id WHERE colour.colour = 'Blue' AND colour.colour = 'Blond';
+SELECT count(superhero.id) FROM superhero INNER JOIN publisher ON superhero.publisher_id = publisher.id WHERE publisher.publisher_name = 'Marvel Comics';
+SELECT superhero.superhero_name FROM superhero INNER JOIN publisher ON superhero.publisher_id = publisher.id WHERE publisher.publisher_name = 'Marvel Comics' ORDER BY superhero.height_cm DESC;
+SELECT publisher_name FROM superhero INNER JOIN publisher ON superhero.publisher_id = publisher.id WHERE superhero.superhero_name = 'Sauron';
+SELECT superhero_name FROM superhero WHERE publisher_id IN (SELECT id FROM publisher WHERE publisher_name = 'Marvel Comics') AND id IN (SELECT hero_id FROM hero_power WHERE power_id IN (SELECT id FROM superpower WHERE power_name = 'Super Strength'));
+SELECT constructors.nationality FROM constructors INNER JOIN constructorresults ON constructors.constructorid = constructorresults.constructorid WHERE constructorresults.raceid = 24 AND constructorresults.points = 1;
+SELECT qualifying.q1 FROM qualifying WHERE qualifying.driverid = 354 AND qualifying.raceid = 354;
+SELECT drivers.nationality FROM drivers INNER JOIN qualifying ON drivers.driverid = qualifying.driverid WHERE qualifying.raceid = 355 AND qualifying.q2 LIKE '0:01:40';
+SELECT drivers.number FROM drivers INNER JOIN qualifying ON drivers.driverid = qualifying.driverid INNER JOIN results ON qualifying.raceid = results.raceid AND qualifying.qualifyid = results.resultid INNER JOIN status ON results.statusid = status.statusid INNER JOIN races ON qualifying.raceid = races.raceid WHERE races.raceid = 903 AND status.status = 'Finished' AND qualifying.q3 LIKE 'M:SS%';
+SELECT count(DISTINCT drivers.driverid) FROM races JOIN results ON races.raceid = results.raceid JOIN drivers ON results.driverid = drivers.driverid WHERE races.name = 'Bahrain Grand Prix' AND races.year = 2007 AND results.time IS NULL;
+SELECT seasons.url FROM seasons INNER JOIN races ON seasons.year = races.year WHERE races.raceid = 901;
+SELECT count(drivers.driverid) FROM drivers INNER JOIN results ON drivers.driverid = results.driverid INNER JOIN races ON results.raceid = races.raceid WHERE races.date = '2015-11-29';
+SELECT drivers.forename FROM drivers INNER JOIN results ON drivers.driverid = results.driverid INNER JOIN races ON results.raceid = races.raceid WHERE results.raceid = 592 AND results.time IS NOT NULL ORDER BY drivers.dob ASC LIMIT 1;
+SELECT drivers.url FROM drivers INNER JOIN laptimes ON drivers.driverid = laptimes.driverid INNER JOIN races ON laptimes.raceid = races.raceid WHERE laptimes.time LIKE '0:01:27' AND races.raceid = '161';
+SELECT drivers.driverref FROM drivers INNER JOIN results ON drivers.driverid = results.driverid INNER JOIN driverstandings ON results.raceid = driverstandings.raceid INNER JOIN races ON driverstandings.raceid = races.raceid INNER JOIN laptimes ON races.raceid = laptimes.raceid WHERE results.raceid = 933 AND results.fastestlapspeed = (SELECT MAX(fastestlapspeed) FROM results WHERE raceid = 933);
+SELECT circuits.lat, circuits.lng FROM circuits INNER JOIN races ON circuits.circuitid = races.circuitid WHERE races.name = 'Malaysian Grand Prix';
+SELECT code FROM drivers WHERE nationality = 'American';
+SELECT driverid FROM results WHERE laps = 1 ORDER BY time LIMIT 5;
+SELECT circuits.country, circuits.lat, circuits.lng FROM circuits WHERE circuits.name = 'Hungaroring';
+SELECT nationality FROM drivers GROUP BY nationality ORDER BY count(nationality) DESC LIMIT 1;
+SELECT races.name FROM races INNER JOIN laptimes ON races.raceid = laptimes.raceid INNER JOIN results ON laptimes.raceid = results.raceid WHERE results.fastestlaptime = (SELECT min(fastestlaptime) FROM results);
+SELECT circuits.lat, circuits.lng FROM circuits INNER JOIN races ON circuits.circuitid = races.circuitid INNER JOIN laptimes ON laptimes.raceid = races.raceid WHERE laptimes.time = '1:29.488';
+SELECT player_api_id FROM player_attributes WHERE overall_rating = (SELECT max(overall_rating) FROM player_attributes);
+SELECT player_name FROM player WHERE height = (SELECT MAX(height) FROM player);
+SELECT player_attributes.preferred_foot FROM player_attributes WHERE player_attributes.potential = (SELECT MIN(potential) FROM player_attributes);
+SELECT count(*) FROM player_attributes INNER JOIN player ON player_attributes.player_api_id = player.player_api_id WHERE player_attributes.overall_rating >= 60 AND player_attributes.overall_rating < 65 AND player_attributes.attacking_work_rate = 'low';
+SELECT player_attributes.id FROM player_attributes ORDER BY player_attributes.crossing DESC LIMIT 5;
+SELECT l.name FROM league l WHERE l.id IN (SELECT league_id FROM match WHERE season = '2015/2016' GROUP BY league_id HAVING SUM(home_team_goal + away_team_goal) = (SELECT max(SUM) FROM (SELECT SUM(home_team_goal + away_team_goal) AS SUM FROM match WHERE season = '2015/2016' GROUP BY league_id)));
+sql placeholder
+sql placeholder
+SELECT player.player_name FROM player_attributes player_attributes JOIN player player ON player_attributes.player_api_id = player.player_api_id WHERE player_attributes.attacking_work_rate = 'high';
+SELECT player.player_name FROM player WHERE player.height > 180 ORDER BY player.player_name ASC LIMIT 0, 3;
+SELECT team_attributes.buildupplayspeedclass FROM team_attributes INNER JOIN team ON team_attributes.team_fifa_api_id = team.team_fifa_api_id WHERE team.team_long_name = 'KSV Cercle Brugge';
+SELECT player_attributes.finishing , player_attributes.curve FROM player_attributes INNER JOIN player ON player_attributes.player_api_id = player.player_api_id WHERE player.weight = (SELECT max(weight) FROM player);
+SELECT player.player_name FROM player INNER JOIN player_attributes ON player.player_api_id = player_attributes.player_api_id WHERE player_attributes.overall_rating = (SELECT MAX(overall_rating) FROM player_attributes);
+SELECT CASE WHEN sex = 'M' AND admission = '+' THEN 1 ELSE 0 END AS inpatient , CASE WHEN sex = 'M' AND admission = '-' THEN 1 ELSE 0 END AS outpatient FROM patient GROUP BY sex , admission ORDER BY inpatient DESC , outpatient DESC;
+sql placeholder
+sql placeholder
+SELECT calculation FROM (SELECT COUNT(id) AS calculation FROM patient WHERE diagnosis = 'SLE' GROUP BY admission);
+SELECT diagnosis FROM patient WHERE id = 30609;
+SELECT examination.`examination date`, patient.sex, patient.birthday FROM examination JOIN patient ON examination.id = patient.id WHERE examination.id = 163109;
+SELECT patient.id, patient.sex, patient.birthday FROM laboratory INNER JOIN patient ON laboratory.id = patient.id WHERE laboratory.ldh > '500';
+sql placeholder
+SELECT patient.id, patient.sex, patient.diagnosis FROM examination INNER JOIN patient ON examination.id = patient.id WHERE examination.thrombosis = 2;
+sql placeholder
+sql placeholder
+SELECT CASE WHEN laboratory.`t-cho` < 250 THEN 'Normal' ELSE 'Abnormal' END FROM laboratory INNER JOIN patient ON laboratory.id = patient.id WHERE patient.id = 2927464 AND strftime('%Y-%m-%d', laboratory.date) = '1995-09-04';
+SELECT count(patient.id) FROM patient INNER JOIN examination ON patient.id = examination.id INNER JOIN laboratory ON patient.id = laboratory.id WHERE examination.`ana pattern` != 'P' AND patient.sex = 'F' AND birthday BETWEEN '1980-01-01' AND '1989-12-31';
+SELECT description AS medical_information_first_documented, diagnosis AS disease FROM patient WHERE id = 48473;
+SELECT count(examination.id) FROM examination examination INNER JOIN laboratory laboratory ON examination.id = laboratory.id WHERE laboratory.glu < 180 AND examination.thrombosis = 0;
+SELECT count(DISTINCT patient.id) FROM patient INNER JOIN laboratory ON patient.id = laboratory.id WHERE patient.admission = '+' AND laboratory.wbc BETWEEN 3.5 AND 9.0;
+SELECT count(laboratory.wbc) FROM examination INNER JOIN patient ON examination.id = patient.id INNER JOIN laboratory ON laboratory.id = patient.id WHERE examination.diagnosis = 'SLE' AND laboratory.wbc BETWEEN 3.5 AND 9.0;
+SELECT count(patient.id) FROM laboratory INNER JOIN patient ON laboratory.id = patient.id WHERE laboratory.plt > 100 AND laboratory.plt < 400 AND patient.diagnosis IS NOT NULL;
+sql placeholder
+SELECT major.major_name FROM member INNER JOIN major ON member.link_to_major = major.major_id WHERE member.first_name = 'Angela' AND member.last_name = 'Sanders';
+SELECT count(*) FROM member WHERE link_to_major IN (SELECT major_id FROM major WHERE college = 'College of Engineering');
+SELECT first_name, last_name FROM member INNER JOIN major ON member.link_to_major = major.major_id WHERE major.department = 'Art and Design Department';
+sql placeholder
+SELECT member.phone FROM attendance INNER JOIN member ON attendance.link_to_member = member.member_id INNER JOIN event ON attendance.link_to_event = event.event_id WHERE event.event_name = 'Women''s Soccer';
+sql placeholder
+SELECT e.event_name FROM event e JOIN attendance a ON e.event_id = a.link_to_event GROUP BY e.event_id ORDER BY COUNT(a.link_to_event) DESC LIMIT 1;
+SELECT college FROM major INNER JOIN member ON major.major_id = member.link_to_major WHERE member.position = 'Vice President';
+SELECT event.event_name FROM event INNER JOIN attendance ON event.event_id = attendance.link_to_event INNER JOIN member ON attendance.link_to_member = member.member_id WHERE member.first_name = 'Maya' AND member.last_name = 'Mclean';
+sql placeholder
+SELECT count(event.event_id) FROM event INNER JOIN attendance ON event.event_id = attendance.link_to_event INNER JOIN member ON attendance.link_to_member = member.member_id WHERE event.type = 'Meeting' AND member.last_name = 'Student_Club';
+SELECT event.event_name FROM event INNER JOIN attendance ON event.event_id = attendance.link_to_event GROUP BY event.event_name HAVING COUNT(event.event_id) > 20 AND event.type != 'Fundraiser';
+sql placeholder
+SELECT expense_description FROM expense WHERE cost = ( SELECT max(cost) FROM expense );
+SELECT count(member.member_id) FROM member member JOIN major major ON member.link_to_major = major.major_id WHERE major.major_name = 'Environmental Engineering';
+SELECT member.first_name, member.last_name FROM member INNER JOIN attendance ON member.member_id = attendance.link_to_member INNER JOIN event ON attendance.link_to_event = event.event_id WHERE event.event_name = 'Laugh Out Loud';
+SELECT member.last_name FROM major INNER JOIN member ON major.major_id = member.link_to_major WHERE major.major_name = 'Law and Constitutional Studies';
+SELECT zip_code.county FROM member INNER JOIN zip_code ON member.zip = zip_code.zip_code WHERE member.last_name = 'Ramsey' AND member.first_name = 'Sherri';
+SELECT major.college FROM major INNER JOIN member ON major.major_id = member.link_to_major WHERE member.last_name = 'Hewitt' AND member.first_name = 'Tyler';
+SELECT income.amount FROM income INNER JOIN member ON income.link_to_member = member.member_id WHERE position = 'Vice President';
+SELECT SUM(expense.cost), COUNT(event.event_id) FROM expense INNER JOIN event ON expense.link_to_budget = event.event_id WHERE event.type = 'Meeting';
+SELECT member.first_name, member.last_name FROM budget INNER JOIN expense ON budget.budget_id = expense.link_to_budget INNER JOIN member ON expense.link_to_member = member.member_id ORDER BY expense.cost DESC LIMIT 5;
+SELECT member.first_name, member.last_name, member.phone FROM member INNER JOIN expense ON member.member_id = expense.link_to_member WHERE expense.cost > (SELECT AVG(cost) FROM expense);
+SELECT SUM(CASE WHEN member.position = 'Member' THEN 1 ELSE 0 END) / COUNT(*) - SUM(CASE WHEN member.position = 'Member' THEN 1 ELSE 0 END) / COUNT(*) FROM member INNER JOIN zip_code ON member.zip = zip_code.zip_code;
+SELECT member.first_name, member.last_name, expense.cost FROM member INNER JOIN expense ON member.member_id = expense.link_to_member WHERE expense.expense_description = 'Water, Veggie tray, supplies';
+SELECT budget.category , budget.amount FROM budget JOIN event ON budget.link_to_event = event.event_id WHERE event.event_name = 'January Speaker';
+SELECT event.event_name FROM budget INNER JOIN event ON budget.link_to_event = event.event_id WHERE budget.category = 'Food';
+SELECT member.first_name, member.last_name, income.amount FROM income INNER JOIN member ON income.link_to_member = member.member_id WHERE income.date_received = '2019-09-09';
+SELECT budget.category FROM expense INNER JOIN budget ON expense.link_to_budget = budget.budget_id WHERE expense.expense_description = 'Posters';
+SELECT yearmonth.customerid, yearmonth.consumption FROM yearmonth INNER JOIN customers ON yearmonth.customerid = customers.customerid WHERE customers.segment = 'KAM' GROUP BY yearmonth.customerid ORDER BY sum(yearmonth.consumption) DESC LIMIT 1;
+SELECT gasstations.country FROM transactions_1k INNER JOIN gasstations ON transactions_1k.gasstationid = gasstations.gasstationid INNER JOIN yearmonth ON transactions_1k.customerid = yearmonth.customerid WHERE yearmonth.date LIKE '201306%';
+SELECT cast(sum(transactions_1k.price) AS REAL) / count(transactions_1k.transactionid) FROM transactions_1k INNER JOIN gasstations ON transactions_1k.gasstationid = gasstations.gasstationid WHERE gasstations.country = 'CZE';
+sql placeholder
+SELECT customers.customerid, customers.currency, SUM(transactions_1k.price) / SUM(transactions_1k.amount) FROM customers INNER JOIN transactions_1k ON customers.customerid = transactions_1k.customerid GROUP BY customers.customerid ORDER BY SUM(transactions_1k.price) / SUM(transactions_1k.amount) DESC LIMIT 1;
