@@ -23,9 +23,9 @@ import argparse
 import json
 import os
 import sqlite3
+import sqlglot
 
 from exec_eval import eval_exec_match
-from process_sql import get_schema, Schema, get_sql
 
 # Flag to disable value evaluation
 DISABLE_VALUE = True
@@ -352,6 +352,150 @@ def count_others(sql):
     return count
 
 
+def count_component1_sqlglot(parsed):
+    """Count SQL components using sqlglot parser instead of dict structure"""
+    try:
+        count = 0
+
+        # Check WHERE clause
+        if parsed.find(sqlglot.exp.Where):
+            count += 1
+
+        # Check GROUP BY clause
+        if parsed.find(sqlglot.exp.Group):
+            count += 1
+
+        # Check ORDER BY clause
+        if parsed.find(sqlglot.exp.Order):
+            count += 1
+
+        # Check LIMIT clause
+        if parsed.find(sqlglot.exp.Limit):
+            count += 1
+
+        # Count JOINs
+        joins = parsed.find_all(sqlglot.exp.Join)
+        count += len(list(joins))
+
+        # Count OR conditions in WHERE clause
+        where = parsed.find(sqlglot.exp.Where)
+        if where:
+            or_conditions = where.find_all(sqlglot.exp.Or)
+            # count += len(list(or_conditions))
+            count += min(1, len(list(or_conditions)))
+
+        # Count LIKE conditions in WHERE clause
+        if where:
+            like_conditions = where.find_all(sqlglot.exp.Like)
+            # count += len(list(like_conditions))
+            count += min(1, len(list(like_conditions)))
+
+        return count
+
+    except Exception as e:
+        # Return 0 if parsing fails
+        print(f"Error parsing SQL with sqlglot: {e}")
+        return -1
+
+
+def count_component2_sqlglot(parsed):
+    """Count nested SQL components using sqlglot parser"""
+    try:
+        count = 0
+
+        # Find all subqueries in WHERE conditions
+        where = parsed.find(sqlglot.exp.Where)
+        if where:
+            subqueries = where.find_all(sqlglot.exp.Subquery)
+            count += len(list(subqueries))
+
+        # Find INTERSECT, EXCEPT, UNION operations
+        for op in [sqlglot.exp.Intersect, sqlglot.exp.Except, sqlglot.exp.Union]:
+            if parsed.find(op):
+                count += 1
+
+        return count
+
+    except Exception as e:
+        print(f"Error parsing SQL with sqlglot: {e}")
+        return -1
+
+
+def count_others_sqlglot(parsed):
+    """Count other SQL components using sqlglot parser"""
+    try:
+        count = 0
+
+        # Count aggregations
+        agg_count = 0
+        agg_types = [sqlglot.exp.Avg, sqlglot.exp.Count, sqlglot.exp.Sum,
+                     sqlglot.exp.Max, sqlglot.exp.Min]
+
+        # Check aggregations in SELECT
+        select = parsed.find(sqlglot.exp.Select)
+        if select:
+            for agg_type in agg_types:
+                aggs = select.find_all(agg_type)
+                agg_count += len(list(aggs))
+
+        # Check aggregations in WHERE
+        where = parsed.find(sqlglot.exp.Where)
+        if where:
+            for agg_type in agg_types:
+                aggs = where.find_all(agg_type)
+                agg_count += len(list(aggs))
+
+        # Check aggregations in GROUP BY
+        group = parsed.find(sqlglot.exp.Group)
+        if group:
+            for agg_type in agg_types:
+                aggs = group.find_all(agg_type)
+                agg_count += len(list(aggs))
+
+        # Check aggregations in ORDER BY
+        order = parsed.find(sqlglot.exp.Order)
+        if order:
+            for agg_type in agg_types:
+                aggs = order.find_all(agg_type)
+                agg_count += len(list(aggs))
+
+        # Check aggregations in HAVING
+        having = parsed.find(sqlglot.exp.Having)
+        if having:
+            for agg_type in agg_types:
+                aggs = having.find_all(agg_type)
+                agg_count += len(list(aggs))
+
+        # Add to count if there are multiple aggregations
+        if agg_count > 1:
+            count += 1
+
+        # Count SELECT columns
+        if select:
+            select_expressions = list(select.find_all(sqlglot.exp.Column))
+            if len(select_expressions) > 1:
+                count += 1
+
+        # Count WHERE conditions
+        # if where:
+        #     where_conditions = list(where.find_all(sqlglot.exp.And))
+        #     if len(where_conditions) > 0:  # More than one condition
+        #         count += 1
+
+        # Count GROUP BY columns
+        if group:
+            group_expressions = list(group.find_all(sqlglot.exp.Column))
+            if len(group_expressions) > 1:
+                count += 1
+
+        return count
+
+    except Exception as e:
+        print(f"Error parsing SQL with sqlglot: {e}")
+        return -1
+
+
+
 class Evaluator:
     """A simple evaluator"""
 
@@ -362,6 +506,33 @@ class Evaluator:
         count_comp1_ = count_component1(sql)
         count_comp2_ = count_component2(sql)
         count_others_ = count_others(sql)
+
+        if count_comp1_ <= 1 and count_others_ == 0 and count_comp2_ == 0:
+            return "easy"
+        elif (count_others_ <= 2 and count_comp1_ <= 1 and count_comp2_ == 0) or \
+                (count_comp1_ <= 2 and count_others_ < 2 and count_comp2_ == 0):
+            return "medium"
+        elif (count_others_ > 2 and count_comp1_ <= 2 and count_comp2_ == 0) or \
+                (2 < count_comp1_ <= 3 and count_others_ <= 2 and count_comp2_ == 0) or \
+                (count_comp1_ <= 1 and count_others_ == 0 and count_comp2_ <= 1):
+            return "hard"
+        else:
+            return "extra"
+
+    def eval_hardness_sqlglot(self, sql):
+        try:
+            sql_parsed = sqlglot.parse_one(sql)
+        except Exception as e:
+            print(f"Error parsing SQL with sqlglot: {e}")
+            return "Unknown"
+
+        sql_parsed = sqlglot.parse_one(sql)
+        count_comp1_ = count_component1_sqlglot(sql_parsed)
+        count_comp2_ = count_component2_sqlglot(sql_parsed)
+        count_others_ = count_others_sqlglot(sql_parsed)
+
+        if count_comp1_ == -1 or count_others_ == -1 or count_comp2_ == -1:
+            return "Unknown"
 
         if count_comp1_ <= 1 and count_others_ == 0 and count_comp2_ == 0:
             return "easy"
