@@ -1,4 +1,7 @@
 .idea/
 .DS_STORE
+data/
 database/
 __pycache__/
+
+temp*.py

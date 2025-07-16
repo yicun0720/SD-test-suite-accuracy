@@ -24,6 +24,7 @@ import json
 import os
 import sqlite3
 import sqlglot
+from collections import defaultdict
 
 from exec_eval import eval_exec_match
 
@@ -672,13 +673,15 @@ def print_scores(scores, etype, include_turn_acc=False):
             print_formated_s("exact match", exact_scores, '{:<20.3f}')
 
 
-def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, progress_bar_for_each_datapoint, ambiguity,
-             upper_bound):
+def evaluate(metadata, gold, predict, db_dir, etype, plug_value, keep_distinct, ambiguity, upper_bound):
+    with open(metadata, 'r') as f:
+        metadata_items = json.load(f)
+
     if ambiguity:
         with open(gold, 'r') as f:
             glist = json.load(f)
     else:
-        with open(gold) as f:
+        with open(gold, 'r') as f:
             glist = []
             for l in f.readlines():
                 glist.append(l.strip().split('\t'))
@@ -697,10 +700,15 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
 
     assert len(plist) == len(glist), "number of sessions must equal"
 
-    score = 0
+    score, count = 0, len(glist)
+    score_by_level, count_by_level = defaultdict(int), defaultdict(int)
+
     for idx, pg in enumerate(zip(plist, glist)):
-        if idx not in [374, 1290, 1291, 1477, 1916, 2109]:
-            continue
+        case_id = idx
+        level = metadata_items[case_id]['difficulty']
+
+        count_by_level[level] += 1
+
         p, g = pg
         if ambiguity:
             db = g["db_id"]
@@ -723,10 +731,11 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
                 if etype in ["all", "exec"]:
                     exec_score = eval_exec_match(db=db, p_str=p_str, g_str=g_str, plug_value=plug_value,
                                                  keep_distinct=keep_distinct,
-                                                 progress_bar_for_each_datapoint=progress_bar_for_each_datapoint)
+                                                 progress_bar_for_each_datapoint=True)
                     if exec_score:
                         eq_flag = True
                         score += 1
+                        score_by_level[level] += 1
                         break
             if eq_flag:
                 break
@@ -734,7 +743,15 @@ def evaluate(gold, predict, db_dir, etype, kmaps, plug_value, keep_distinct, pro
             print(str(1) + "\t" + p_str + "\t" + g_str)
         else:
             print(str(0) + "\t" + p_str + "\t" + g_str)
-    print("Accuracy: {:.3f}".format(score * 1.0 / len(glist) * 100))
+    print("Accuracy: {:.3f}".format(score * 1.0 / count * 100))
+
+    score_by_level['all'], count_by_level['all'] = score, count
+
+    accuracy_by_level = defaultdict(float)
+    for level in score_by_level.keys():
+        accuracy_by_level[level] = (score_by_level[level] * 1.0 / count_by_level[level]) * 100
+
+    print(accuracy_by_level)
 
 
 # Rebuild SQL functions for value evaluation
@@ -951,6 +968,7 @@ if __name__ == "__main__":
     parser.add_argument('--pred', dest='pred', type=str, help="the path to the predicted queries")
     parser.add_argument('--db', dest='db', type=str, help="the directory that contains all the databases and test suites")
     parser.add_argument('--table', dest='table', type=str, help="the tables.json schema file")
+    parser.add_argument('--metadata', dest='metadata', type=str, help="the dev/test.json file storing raw test cases")
     parser.add_argument('--ambiguity', default=False, action='store_true')
     parser.add_argument('--upper_bound', default=False, action='store_true')
     parser.add_argument('--etype', dest='etype', type=str, default='exec',
@@ -960,15 +978,14 @@ if __name__ == "__main__":
                         help='whether to plug in the gold value into the predicted query; suitable if your model does not predict values.')
     parser.add_argument('--keep_distinct', default=True, action='store_true',
                         help='whether to keep distinct keyword during evaluation. default is false.')
-    parser.add_argument('--progress_bar_for_each_datapoint', default=False, action='store_true',
-                        help='whether to print progress bar of running test inputs for each datapoint')
+
     args = parser.parse_args()
 
-    # only evaluting exact match needs this argument
+    # only evaluating exact match needs this argument
     kmaps = None
     if args.etype in ['all', 'match']:
         assert args.table is not None, 'table argument must be non-None if exact set match is evaluated'
         kmaps = build_foreign_key_map_from_json(args.table)
 
-    evaluate(args.gold, args.pred, args.db, args.etype, kmaps, args.plug_value, args.keep_distinct,
-             args.progress_bar_for_each_datapoint, args.ambiguity, args.upper_bound)
+    evaluate(args.metadata, args.gold, args.pred, args.db,
+             args.etype, args.plug_value, args.keep_distinct, args.ambiguity, args.upper_bound)
