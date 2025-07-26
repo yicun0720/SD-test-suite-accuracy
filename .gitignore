@@ -2,6 +2,8 @@
 .DS_STORE
 data/
 database/
+evaluation_examples/
+result/
 __pycache__/
 
 temp*.py

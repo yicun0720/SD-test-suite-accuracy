@@ -966,9 +966,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--gold', dest='gold', type=str, help="the path to the gold queries")
     parser.add_argument('--pred', dest='pred', type=str, help="the path to the predicted queries")
+    parser.add_argument('--metadata', dest='metadata', type=str, help="the dev/test.json file storing raw test cases")
     parser.add_argument('--db', dest='db', type=str, help="the directory that contains all the databases and test suites")
     parser.add_argument('--table', dest='table', type=str, help="the tables.json schema file")
-    parser.add_argument('--metadata', dest='metadata', type=str, help="the dev/test.json file storing raw test cases")
     parser.add_argument('--ambiguity', default=False, action='store_true')
     parser.add_argument('--upper_bound', default=False, action='store_true')
     parser.add_argument('--etype', dest='etype', type=str, default='exec',
