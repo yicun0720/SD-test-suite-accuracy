@@ -731,7 +731,7 @@ def evaluate(metadata, gold, predict, db_dir, etype, plug_value, keep_distinct, 
                 if etype in ["all", "exec"]:
                     exec_score = eval_exec_match(db=db, p_str=p_str, g_str=g_str, plug_value=plug_value,
                                                  keep_distinct=keep_distinct,
-                                                 progress_bar_for_each_datapoint=True)
+                                                 progress_bar_for_each_datapoint=False)
                     if exec_score:
                         eq_flag = True
                         score += 1
@@ -751,7 +751,7 @@ def evaluate(metadata, gold, predict, db_dir, etype, plug_value, keep_distinct, 
     for level in score_by_level.keys():
         accuracy_by_level[level] = (score_by_level[level] * 1.0 / count_by_level[level]) * 100
 
-    print(accuracy_by_level)
+    print(dict(accuracy_by_level))
 
 
 # Rebuild SQL functions for value evaluation
